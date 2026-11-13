@@ -1,0 +1,56 @@
+# NZ species filter for perch_analyse.py (one scientific name per line, # = comment).
+# Check the "unmatched" report on first run: Perch's taxonomy may use different/updated names.
+
+# --- Native ---
+Apteryx mantelli
+Apteryx australis
+Apteryx rowi
+Apteryx haastii
+Apteryx owenii
+Prosthemadera novaeseelandiae
+Anthornis melanura
+Notiomystis cincta
+Gerygone igata
+Rhipidura fuliginosa
+Petroica longipes
+Petroica australis
+Petroica macrocephala
+Mohoua ochrocephala
+Mohoua albicilla
+Mohoua novaeseelandiae
+Zosterops lateralis
+Nestor meridionalis
+Nestor notabilis
+Cyanoramphus novaezelandiae
+Cyanoramphus auriceps
+Hemiphaga novaeseelandiae
+Strigops habroptilus
+Ninox novaeseelandiae
+Callaeas wilsoni
+Callaeas cinerea
+Philesturnus rufusater
+Philesturnus carunculatus
+Porphyrio hochstetteri
+Porphyrio melanotus
+Gallirallus australis
+Todiramphus sanctus
+Poodytes punctatus
+Bowdleria punctata
+Anthus novaeseelandiae
+Falco novaeseelandiae
+Circus approximans
+Hirundo neoxena
+
+# --- Common introduced (keep: they cause most false positives if excluded) ---
+Turdus merula
+Turdus philomelos
+Fringilla coelebs
+Prunella modularis
+Passer domesticus
+Sturnus vulgaris
+Acridotheres tristis
+Emberiza citrinella
+Carduelis carduelis
+Chloris chloris
+Acanthis flammea
+Gymnorhina tibicen

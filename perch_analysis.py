@@ -12,8 +12,8 @@ Install:
   (Perch 2 needs tensorflow >= 2.20. Lighter alternatives: bmz.Perch2ONNX / bmz.Perch2LiteRT.)
 
 Usage:
-  python perch_analyse.py recording.wav
-  python perch_analyse.py ./recordings --threshold 0.3 --top-k 3 --embeddings
+  python perch_analysis.py recording.wav
+  python perch_analysis.py ./recordings --threshold 0.3 --top-k 3 --embeddings
 """
 import argparse
 from pathlib import Path
