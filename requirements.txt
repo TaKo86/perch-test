@@ -1,0 +1,7 @@
+bioacoustics-model-zoo
+flask
+joblib
+numpy
+pandas
+scikit-learn
+tensorflow

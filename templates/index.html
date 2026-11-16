@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NZ Bird Sound Classifier</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: #1d2b24;
+      background: #f3f6f1;
+    }
+    body { margin: 0; padding: 3rem 1rem; }
+    main {
+      max-width: 760px; margin: auto; padding: 2rem;
+      background: white; border: 1px solid #dce5dc; border-radius: 16px;
+      box-shadow: 0 12px 40px #18351d0c;
+    }
+    h1 { margin-top: 0; font-size: clamp(1.7rem, 5vw, 2.3rem); }
+    p { line-height: 1.55; }
+    .muted { color: #5c6b61; font-size: .94rem; }
+    form { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin: 1.5rem 0; }
+    input[type=file] { max-width: 100%; }
+    button {
+      border: 0; border-radius: 8px; padding: .75rem 1.1rem;
+      color: white; background: #27623e; font: inherit; font-weight: 650;
+      cursor: pointer;
+    }
+    button:hover { background: #1d4e31; }
+    .notice { padding: .85rem 1rem; border-radius: 8px; background: #fff3e8; color: #713d13; }
+    .results { margin-top: 2rem; }
+    .window {
+      margin: 1rem 0; padding: 1rem 1.1rem;
+      border: 1px solid #dce5dc; border-radius: 10px;
+    }
+    .window h3 { margin: 0 0 .65rem; font-size: 1rem; }
+    .window ol { margin: 0; padding-left: 1.5rem; }
+    .window li { padding: .15rem 0; }
+    .score { color: #5c6b61; }
+    .warning { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5ebe5; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>NZ Bird Sound Classifier</h1>
+    <p>Upload a recording to analyze it in 5-second segments with Perch embeddings and our New Zealand bird classifier.</p>
+    <form method="post" enctype="multipart/form-data">
+      <label for="audio">Audio file</label>
+      <input id="audio" name="audio" type="file" accept=".wav,.flac,.mp3,.ogg,.m4a,audio/*" required>
+      <button type="submit">Analyze recording</button>
+    </form>
+    <p class="muted">WAV, FLAC, MP3, OGG, or M4A; up to {{ max_upload_mb }} MB. Processing may take a little while.</p>
+
+    {% if error %}
+      <p class="notice" role="alert">{{ error }}</p>
+    {% endif %}
+
+    {% if results is defined %}
+      <section class="results" aria-live="polite">
+        <h2>Results for {{ filename }}</h2>
+        {% if results %}
+          {% for window in results %}
+            <article class="window">
+              <h3>{{ "%.0f"|format(window.start) }}–{{ "%.0f"|format(window.end) }} seconds</h3>
+              <ol>
+                {% for prediction in window.predictions %}
+                  <li>{{ prediction.label }} <span class="score">({{ "%.1f"|format(prediction.score * 100) }}%)</span></li>
+                {% endfor %}
+              </ol>
+            </article>
+          {% endfor %}
+        {% else %}
+          <p>No audio segments were returned for this recording.</p>
+        {% endif %}
+        <p class="muted warning">Scores are model estimates, not calibrated probabilities or a guarantee of species identification. Review the audio before relying on a result.</p>
+      </section>
+    {% endif %}
+  </main>
+</body>
+</html>
