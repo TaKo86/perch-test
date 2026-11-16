@@ -3,62 +3,121 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f2">
   <title>NZ Bird Sound Classifier</title>
   <style>
     :root {
       color-scheme: light;
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      color: #1d2b24;
-      background: #f3f6f1;
+      color: #193329;
+      background: #f5f7f2;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --green: #245c43;
+      --border: #dce5dc;
+      --muted: #586a60;
     }
-    body { margin: 0; padding: 3rem 1rem; }
-    main {
-      max-width: 760px; margin: auto; padding: 2rem;
-      background: white; border: 1px solid #dce5dc; border-radius: 16px;
-      box-shadow: 0 12px 40px #18351d0c;
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: clamp(1rem, 5vw, 3.5rem) 1rem; }
+    main { max-width: 760px; margin: auto; }
+    .eyebrow {
+      margin: 0 0 .45rem; color: var(--green); font-size: .78rem;
+      font-weight: 750; letter-spacing: .12em; text-transform: uppercase;
     }
-    h1 { margin-top: 0; font-size: clamp(1.7rem, 5vw, 2.3rem); }
-    p { line-height: 1.55; }
-    .muted { color: #5c6b61; font-size: .94rem; }
-    form { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; margin: 1.5rem 0; }
-    input[type=file] { max-width: 100%; }
-    button {
-      border: 0; border-radius: 8px; padding: .75rem 1.1rem;
-      color: white; background: #27623e; font: inherit; font-weight: 650;
-      cursor: pointer;
+    h1 { margin: 0; font-size: clamp(1.9rem, 7vw, 3rem); letter-spacing: -.04em; }
+    h2 { margin: 0; font-size: 1.35rem; }
+    p { line-height: 1.6; }
+    .intro { max-width: 58ch; margin: .8rem 0 1.5rem; color: var(--muted); }
+    .panel, .results {
+      padding: clamp(1rem, 4vw, 1.6rem); background: white;
+      border: 1px solid var(--border); border-radius: 18px;
+      box-shadow: 0 14px 40px #18351d0b;
     }
-    button:hover { background: #1d4e31; }
-    .notice { padding: .85rem 1rem; border-radius: 8px; background: #fff3e8; color: #713d13; }
-    .results { margin-top: 2rem; }
-    .window {
-      margin: 1rem 0; padding: 1rem 1.1rem;
-      border: 1px solid #dce5dc; border-radius: 10px;
+    .panel h2 { margin-bottom: 1rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+    button, .file-picker {
+      display: inline-flex; min-height: 48px; align-items: center; justify-content: center;
+      border: 1px solid var(--green); border-radius: 10px; padding: .7rem 1rem;
+      color: white; background: var(--green); font: inherit; font-weight: 700;
+      text-align: center; cursor: pointer;
     }
+    button:hover, .file-picker:hover { background: #194832; }
+    button:focus-visible, .file-picker:focus-within, input:focus-visible {
+      outline: 3px solid #97c8a9; outline-offset: 3px;
+    }
+    button:disabled { cursor: wait; opacity: .7; }
+    button.secondary { color: var(--green); background: white; }
+    button.secondary:hover { background: #f0f5f0; }
+    .file-picker { position: relative; overflow: hidden; color: var(--green); background: white; }
+    .file-picker:hover { color: white; }
+    .file-picker input {
+      position: absolute; width: 1px; height: 1px; overflow: hidden;
+      clip: rect(0, 0, 0, 0); white-space: nowrap;
+    }
+    .hint, .muted { color: var(--muted); font-size: .92rem; }
+    .hint { margin: 1rem 0 0; }
+    .divider { display: flex; align-items: center; gap: .8rem; margin: 1.1rem 0; color: #77877d; font-size: .85rem; }
+    .divider::before, .divider::after { height: 1px; flex: 1; background: var(--border); content: ""; }
+    .recording-status { min-height: 1.5rem; margin: .85rem 0 0; color: var(--muted); }
+    .recording-status[data-state="recording"] { color: #a33030; font-weight: 700; }
+    audio { display: block; width: 100%; margin-top: 1rem; }
+    [hidden] { display: none !important; }
+    .notice { margin: 1rem 0; padding: .9rem 1rem; border-radius: 10px; background: #fff3e8; color: #713d13; }
+    .results { margin-top: 1.25rem; }
+    .results-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem; }
+    .window { margin-top: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: 12px; }
     .window h3 { margin: 0 0 .65rem; font-size: 1rem; }
-    .window ol { margin: 0; padding-left: 1.5rem; }
-    .window li { padding: .15rem 0; }
-    .score { color: #5c6b61; }
-    .warning { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5ebe5; }
+    .window ol { margin: 0; padding-left: 1.4rem; }
+    .window li { padding: .2rem 0; }
+    .score { color: var(--muted); }
+    .warning { margin: 1.2rem 0 0; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .upload-status { min-height: 1.5rem; margin-bottom: 0; color: var(--muted); }
+    @media (max-width: 480px) {
+      body { padding: 1.5rem .85rem; }
+      .actions { display: grid; }
+      .actions > * { width: 100%; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      button, .file-picker { transition: background-color .15s ease; }
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>NZ Bird Sound Classifier</h1>
-    <p>Upload a recording to analyze it in 5-second segments with Perch embeddings and our New Zealand bird classifier.</p>
-    <form method="post" enctype="multipart/form-data">
-      <label for="audio">Audio file</label>
-      <input id="audio" name="audio" type="file" accept=".wav,.flac,.mp3,.ogg,.m4a,audio/*" required>
-      <button type="submit">Analyze recording</button>
-    </form>
-    <p class="muted">WAV, FLAC, MP3, OGG, or M4A; up to {{ max_upload_mb }} MB. Processing may take a little while.</p>
+    <header>
+      <p class="eyebrow">Bird sound analysis · Aotearoa New Zealand</p>
+      <h1>What’s singing nearby?</h1>
+      <p class="intro">Record a bird call on your device or choose an audio file. The app analyses your sample in 5-second segments.</p>
+    </header>
+
+    <section class="panel" aria-labelledby="sample-heading">
+      <h2 id="sample-heading">Add a recording</h2>
+      <form id="analysis-form" method="post" enctype="multipart/form-data">
+        <div class="actions">
+          <button id="record-button" class="secondary" type="button" hidden>Record a sample</button>
+          <label class="file-picker" for="audio">Choose an audio file
+            <input id="audio" name="audio" type="file" accept=".wav,.flac,.mp3,.ogg,.m4a,audio/*" required>
+          </label>
+          <button id="analyze-button" type="submit">Analyze recording</button>
+        </div>
+        <p id="recording-unavailable" class="hint" hidden>Microphone recording is not available in this browser. You can still choose an audio file.</p>
+        <p id="recording-status" class="recording-status" role="status" aria-live="polite"></p>
+        <audio id="audio-preview" controls aria-label="Recording preview" hidden></audio>
+        <p class="hint">WAV, FLAC, MP3, OGG, or M4A · up to {{ max_upload_mb }} MB. Microphone access requires permission and a secure connection (HTTPS or localhost). Recordings are limited to 2 minutes.</p>
+        <p id="upload-status" class="upload-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
 
     {% if error %}
       <p class="notice" role="alert">{{ error }}</p>
     {% endif %}
 
     {% if results is defined %}
-      <section class="results" aria-live="polite">
-        <h2>Results for {{ filename }}</h2>
+      <section class="results" aria-live="polite" aria-labelledby="results-heading">
+        <div class="results-heading">
+          <h2 id="results-heading">Analysis results</h2>
+          <span class="muted">{{ filename }}</span>
+        </div>
         {% if results %}
           {% for window in results %}
             <article class="window">
@@ -77,5 +136,180 @@
       </section>
     {% endif %}
   </main>
+  <script>
+    (() => {
+      const form = document.querySelector("#analysis-form");
+      const fileInput = document.querySelector("#audio");
+      const recordButton = document.querySelector("#record-button");
+      const recordingStatus = document.querySelector("#recording-status");
+      const unavailableNotice = document.querySelector("#recording-unavailable");
+      const preview = document.querySelector("#audio-preview");
+      const uploadStatus = document.querySelector("#upload-status");
+      const analyzeButton = document.querySelector("#analyze-button");
+      const maxRecordingSeconds = 120;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const supported = navigator.mediaDevices && navigator.mediaDevices.getUserMedia &&
+        AudioContextClass && AudioContextClass.prototype.createScriptProcessor;
+
+      if (!supported) {
+        unavailableNotice.hidden = false;
+        return;
+      }
+
+      recordButton.hidden = false;
+      let audioContext;
+      let source;
+      let processor;
+      let stream;
+      let sampleChunks = [];
+      let sampleCount = 0;
+      let timer;
+      let recordingStartedAt;
+      let previewUrl;
+
+      function stopTracks() {
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+          stream = undefined;
+        }
+      }
+
+      function showPreview(file) {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+        previewUrl = URL.createObjectURL(file);
+        preview.src = previewUrl;
+        preview.hidden = false;
+      }
+
+      function writeText(view, offset, text) {
+        for (let i = 0; i < text.length; i += 1) view.setUint8(offset + i, text.charCodeAt(i));
+      }
+
+      function toWav(chunks, length, sampleRate) {
+        const samples = new Float32Array(length);
+        let offset = 0;
+        for (const chunk of chunks) {
+          samples.set(chunk, offset);
+          offset += chunk.length;
+        }
+
+        const buffer = new ArrayBuffer(44 + samples.length * 2);
+        const view = new DataView(buffer);
+        writeText(view, 0, "RIFF");
+        view.setUint32(4, 36 + samples.length * 2, true);
+        writeText(view, 8, "WAVE");
+        writeText(view, 12, "fmt ");
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        writeText(view, 36, "data");
+        view.setUint32(40, samples.length * 2, true);
+        for (let i = 0; i < samples.length; i += 1) {
+          const sample = Math.max(-1, Math.min(1, samples[i]));
+          view.setInt16(44 + i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+        }
+        return new File([buffer], "microphone-recording.wav", { type: "audio/wav" });
+      }
+
+      function stopRecording() {
+        if (!audioContext || audioContext.state === "closed") return;
+        clearInterval(timer);
+        processor.disconnect();
+        source.disconnect();
+        stopTracks();
+        recordButton.disabled = true;
+        recordButton.textContent = "Record again";
+        recordingStatus.dataset.state = "";
+        recordingStatus.textContent = "Preparing your recording…";
+        const context = audioContext;
+        audioContext = undefined;
+        context.close().then(() => {
+          if (!sampleCount) throw new Error("No audio was captured. Please try recording again.");
+          const file = toWav(sampleChunks, sampleCount, context.sampleRate);
+          const transfer = new DataTransfer();
+          transfer.items.add(file);
+          fileInput.files = transfer.files;
+          showPreview(file);
+          recordingStatus.textContent = "Recording ready. Preview it, then analyze when you’re ready.";
+        }).catch((error) => {
+          recordingStatus.textContent = `Could not prepare that recording: ${error.message}`;
+        }).finally(() => {
+          sampleChunks = [];
+          sampleCount = 0;
+          recordButton.disabled = false;
+        });
+      }
+
+      recordButton.addEventListener("click", async () => {
+        if (audioContext) {
+          stopRecording();
+          return;
+        }
+
+        recordButton.disabled = true;
+        recordingStatus.textContent = "Waiting for microphone permission…";
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          audioContext = new AudioContextClass();
+          await audioContext.resume();
+          sampleChunks = [];
+          sampleCount = 0;
+          source = audioContext.createMediaStreamSource(stream);
+          processor = audioContext.createScriptProcessor(4096, 1, 1);
+          processor.onaudioprocess = (event) => {
+            const input = event.inputBuffer.getChannelData(0);
+            sampleChunks.push(new Float32Array(input));
+            sampleCount += input.length;
+            event.outputBuffer.getChannelData(0).fill(0);
+          };
+          source.connect(processor);
+          processor.connect(audioContext.destination);
+          recordingStartedAt = Date.now();
+          recordButton.textContent = "Stop recording";
+          recordButton.disabled = false;
+          recordingStatus.dataset.state = "recording";
+          recordingStatus.textContent = `Recording… ${maxRecordingSeconds}s maximum`;
+          timer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - recordingStartedAt) / 1000);
+            recordingStatus.textContent = `Recording… ${Math.max(0, maxRecordingSeconds - elapsed)}s remaining`;
+            if (elapsed >= maxRecordingSeconds) stopRecording();
+          }, 500);
+        } catch (error) {
+          if (processor) processor.disconnect();
+          if (source) source.disconnect();
+          stopTracks();
+          if (audioContext) {
+            audioContext.close();
+            audioContext = undefined;
+          }
+          recordButton.disabled = false;
+          recordingStatus.textContent = `Could not access the microphone: ${error.message}`;
+        }
+      });
+
+      fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        if (file) {
+          showPreview(file);
+          recordingStatus.textContent = "";
+          recordingStatus.dataset.state = "";
+        }
+      });
+      form.addEventListener("submit", () => {
+        analyzeButton.disabled = true;
+        analyzeButton.textContent = "Analyzing…";
+        uploadStatus.textContent = "Your audio is being analyzed. This may take a little while.";
+      });
+      window.addEventListener("pagehide", () => {
+        clearInterval(timer);
+        stopTracks();
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+      });
+    })();
+  </script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Upload bird audio and classify it with the saved NZ Perch probe."""
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from threading import Lock
@@ -71,6 +72,11 @@ def upload_too_large(_error):
     )
 
 
+@app.get("/healthz")
+def health():
+    return {"status": "ok"}
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
@@ -109,4 +115,4 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    app.run(host="127.0.0.1", port=int(os.environ.get("PORT", "5000")), debug=False)
