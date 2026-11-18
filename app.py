@@ -6,11 +6,12 @@ from tempfile import TemporaryDirectory
 from threading import Lock
 
 import joblib
-from flask import Flask, render_template, request
+from flask import Flask, abort, render_template, request
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
 import bioacoustics_model_zoo as bmz
+from bird_facts import BIRD_FACTS, get_bird_facts, slugify_bird_label
 
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "nz_birds_probe.joblib"
@@ -77,11 +78,22 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/birds/<slug>")
+def bird_detail(slug):
+    for label, bird in BIRD_FACTS.items():
+        if slugify_bird_label(label) == slug:
+            return render_template("bird.html", bird=bird)
+    abort(404)
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "GET":
         return render_template(
-            "index.html", max_upload_mb=MAX_UPLOAD_BYTES // (1024 * 1024)
+            "index.html",
+            max_upload_mb=MAX_UPLOAD_BYTES // (1024 * 1024),
+            get_bird_facts=get_bird_facts,
+            slugify_bird_label=slugify_bird_label,
         )
 
     upload = request.files.get("audio")
@@ -90,6 +102,8 @@ def index():
             "index.html",
             error="Choose an audio file to analyze.",
             max_upload_mb=MAX_UPLOAD_BYTES // (1024 * 1024),
+            get_bird_facts=get_bird_facts,
+            slugify_bird_label=slugify_bird_label,
         ), 400
 
     filename = secure_filename(upload.filename)
@@ -99,6 +113,8 @@ def index():
             "index.html",
             error="Use a WAV, FLAC, MP3, OGG, or M4A audio file.",
             max_upload_mb=MAX_UPLOAD_BYTES // (1024 * 1024),
+            get_bird_facts=get_bird_facts,
+            slugify_bird_label=slugify_bird_label,
         ), 400
 
     with TemporaryDirectory(prefix="perch-upload-") as temp_dir:
@@ -111,6 +127,8 @@ def index():
         filename=filename,
         results=results,
         max_upload_mb=MAX_UPLOAD_BYTES // (1024 * 1024),
+        get_bird_facts=get_bird_facts,
+        slugify_bird_label=slugify_bird_label,
     )
 
 

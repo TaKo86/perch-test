@@ -33,6 +33,24 @@ def test_upload_renders_analysis_result(monkeypatch):
     assert b"Analysis results" in response.data
     assert b"recording.wav" in response.data
     assert b"tui" in response.data
+    assert b'href="/birds/tui"' in response.data
+    assert b'data-scientific-name="Prosthemadera novaeseelandiae"' in response.data
+    assert b'<dialog id="bird-dialog"' in response.data
+    assert b"dialog.showModal()" in response.data
+
+
+def test_bird_detail_shows_scientific_name_and_photo_loading():
+    response = app_module.app.test_client().get("/birds/tui")
+
+    assert response.status_code == 200
+    assert b"Prosthemadera novaeseelandiae" in response.data
+    assert b"Loading a photo" in response.data
+
+
+def test_unknown_bird_detail_returns_not_found():
+    response = app_module.app.test_client().get("/birds/not-a-bird")
+
+    assert response.status_code == 404
 
 
 def test_upload_rejects_unsupported_file_type():

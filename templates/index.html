@@ -3,102 +3,234 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f7f2">
+  <meta name="theme-color" content="#f6f5ef">
   <title>NZ Bird Sound Classifier</title>
   <style>
     :root {
       color-scheme: light;
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      color: #193329;
-      background: #f5f7f2;
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      color: #193a30;
+      background: #f6f5ef;
       font-synthesis: none;
       text-rendering: optimizeLegibility;
-      --green: #245c43;
-      --border: #dce5dc;
-      --muted: #586a60;
+      --forest: #194b3a;
+      --forest-dark: #12392d;
+      --leaf: #dce9d9;
+      --lime: #d9e67a;
+      --paper: #fffefa;
+      --canvas: #f6f5ef;
+      --border: #e4e6dc;
+      --muted: #68776e;
+      --shadow: 0 18px 55px #18351d0c, 0 2px 8px #18351d08;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; padding: clamp(1rem, 5vw, 3.5rem) 1rem; }
-    main { max-width: 760px; margin: auto; }
+    body {
+      min-height: 100vh; margin: 0; padding: clamp(1.25rem, 5vw, 4rem) 1.25rem;
+      background: radial-gradient(ellipse at 82% 4%, #e8eddc 0, transparent 27rem), var(--canvas);
+    }
+    main { max-width: 900px; margin: auto; }
+    .hero {
+      display: flex; min-height: 260px; align-items: center; justify-content: space-between;
+      gap: 2rem; padding: 1rem .25rem 2rem;
+    }
+    .hero-copy { max-width: 610px; }
     .eyebrow {
-      margin: 0 0 .45rem; color: var(--green); font-size: .78rem;
-      font-weight: 750; letter-spacing: .12em; text-transform: uppercase;
+      display: inline-flex; align-items: center; gap: .55rem;
+      margin: 0 0 1rem; color: var(--forest); font-size: .75rem;
+      font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
     }
-    h1 { margin: 0; font-size: clamp(1.9rem, 7vw, 3rem); letter-spacing: -.04em; }
-    h2 { margin: 0; font-size: 1.35rem; }
-    p { line-height: 1.6; }
-    .intro { max-width: 58ch; margin: .8rem 0 1.5rem; color: var(--muted); }
+    .eyebrow-dot { width: 8px; height: 8px; border-radius: 50%; background: #92a740; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin-bottom: .7rem; font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.7rem, 7vw, 4.7rem); font-weight: 500;
+      line-height: .99; letter-spacing: -.055em;
+    }
+    h1 em { color: #587d53; font-weight: 400; }
+    h2 { margin-bottom: 0; font-size: 1.22rem; letter-spacing: -.025em; }
+    p { line-height: 1.65; }
+    .intro { max-width: 53ch; margin: .9rem 0 0; color: var(--muted); font-size: 1.04rem; }
+    .hero-art {
+      position: relative; display: grid; width: 188px; height: 188px; flex: 0 0 188px;
+      place-items: center; border: 1px solid #d6dfcd; border-radius: 50%;
+      color: var(--forest); background: linear-gradient(145deg, #e6eddc, #d5e2ce);
+      box-shadow: inset 0 0 0 12px #ffffff42;
+    }
+    .hero-art::before, .hero-art::after {
+      position: absolute; width: 17px; height: 17px; border: 1px solid #aebd9b;
+      border-radius: 50%; content: "";
+    }
+    .hero-art::before { top: 28px; right: 27px; }
+    .hero-art::after { bottom: 30px; left: 25px; width: 9px; height: 9px; background: #a7ba80; }
+    .hero-art svg { width: 100px; height: 100px; }
+    .hero-art-label {
+      position: absolute; right: -14px; bottom: 24px; padding: .55rem .75rem;
+      border: 1px solid #fffefa; border-radius: 999px; background: var(--paper);
+      color: var(--forest); font-size: .65rem; font-weight: 800; letter-spacing: .14em;
+      box-shadow: 0 5px 16px #18351d12;
+    }
     .panel, .results {
-      padding: clamp(1rem, 4vw, 1.6rem); background: white;
-      border: 1px solid var(--border); border-radius: 18px;
-      box-shadow: 0 14px 40px #18351d0b;
+      padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid var(--border);
+      border-radius: 22px; background: var(--paper); box-shadow: var(--shadow);
     }
-    .panel h2 { margin-bottom: 1rem; }
-    .actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+    .panel-heading { display: flex; align-items: center; gap: .9rem; margin-bottom: 1.4rem; }
+    .panel-icon {
+      display: grid; width: 46px; height: 46px; flex: 0 0 46px; place-items: center;
+      border-radius: 15px; color: var(--forest); background: #edf2e8;
+    }
+    .panel-icon svg { width: 22px; height: 22px; }
+    .panel-subtitle { margin: .2rem 0 0; color: var(--muted); font-size: .9rem; }
+    .step-label {
+      margin-left: auto; color: #88948b; font-size: .68rem;
+      font-weight: 800; letter-spacing: .12em;
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: .7rem; }
     button, .file-picker {
-      display: inline-flex; min-height: 48px; align-items: center; justify-content: center;
-      border: 1px solid var(--green); border-radius: 10px; padding: .7rem 1rem;
-      color: white; background: var(--green); font: inherit; font-weight: 700;
-      text-align: center; cursor: pointer;
+      display: inline-flex; min-height: 50px; align-items: center; justify-content: center;
+      gap: .55rem; border: 1px solid var(--forest); border-radius: 12px;
+      padding: .75rem 1rem; color: white; background: var(--forest);
+      font: inherit; font-size: .92rem; font-weight: 750; text-align: center; cursor: pointer;
+      transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease;
     }
-    button:hover, .file-picker:hover { background: #194832; }
-    button:focus-visible, .file-picker:focus-within, input:focus-visible {
-      outline: 3px solid #97c8a9; outline-offset: 3px;
+    button:hover, .file-picker:hover { transform: translateY(-1px); box-shadow: 0 7px 16px #18351d1c; }
+    button:focus-visible, .file-picker:focus-within, input:focus-visible, a:focus-visible {
+      outline: 3px solid #a3bf70; outline-offset: 3px;
     }
-    button:disabled { cursor: wait; opacity: .7; }
-    button.secondary { color: var(--green); background: white; }
-    button.secondary:hover { background: #f0f5f0; }
-    .file-picker { position: relative; overflow: hidden; color: var(--green); background: white; }
-    .file-picker:hover { color: white; }
+    button:disabled { cursor: wait; opacity: .7; transform: none; }
+    button svg, .file-picker svg { width: 18px; height: 18px; }
+    button.secondary { color: var(--forest); background: white; }
+    button.secondary:hover { background: #f5f7f1; }
+    .file-picker { position: relative; overflow: hidden; border-color: var(--border); color: var(--forest); background: white; }
+    .file-picker:hover { border-color: #b7c8ac; background: #f8faf5; }
     .file-picker input {
       position: absolute; width: 1px; height: 1px; overflow: hidden;
       clip: rect(0, 0, 0, 0); white-space: nowrap;
     }
-    .hint, .muted { color: var(--muted); font-size: .92rem; }
-    .hint { margin: 1rem 0 0; }
-    .divider { display: flex; align-items: center; gap: .8rem; margin: 1.1rem 0; color: #77877d; font-size: .85rem; }
-    .divider::before, .divider::after { height: 1px; flex: 1; background: var(--border); content: ""; }
-    .recording-status { min-height: 1.5rem; margin: .85rem 0 0; color: var(--muted); }
-    .recording-status[data-state="recording"] { color: #a33030; font-weight: 700; }
-    audio { display: block; width: 100%; margin-top: 1rem; }
+    .hint, .muted { color: var(--muted); font-size: .88rem; }
+    .hint { margin: .85rem 0 0; }
+    .recording-status { min-height: 1.5rem; margin: .85rem 0 0; color: var(--muted); font-size: .9rem; }
+    .recording-status[data-state="recording"] { color: #a33030; font-weight: 750; }
+    audio { display: block; width: 100%; margin-top: 1rem; border-radius: 12px; }
     [hidden] { display: none !important; }
-    .notice { margin: 1rem 0; padding: .9rem 1rem; border-radius: 10px; background: #fff3e8; color: #713d13; }
+    .notice { margin: 1rem 0; padding: 1rem 1.1rem; border: 1px solid #f0d7bc; border-radius: 12px; background: #fff4e8; color: #713d13; }
     .results { margin-top: 1.25rem; }
-    .results-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem; }
-    .window { margin-top: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: 12px; }
-    .window h3 { margin: 0 0 .65rem; font-size: 1rem; }
-    .window ol { margin: 0; padding-left: 1.4rem; }
-    .window li { padding: .2rem 0; }
-    .score { color: var(--muted); }
+    .results-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+    .results-title-wrap { display: flex; align-items: center; gap: .75rem; }
+    .results-heading h2 { font-family: Georgia, "Times New Roman", serif; font-size: 1.7rem; font-weight: 500; }
+    .results-kicker { display: block; margin-bottom: .15rem; color: #78877b; font-size: .64rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    .results-icon { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 13px; color: var(--forest); background: var(--leaf); }
+    .results-icon svg { width: 20px; height: 20px; }
+    .file-badge { max-width: 100%; overflow: hidden; padding: .45rem .75rem; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); background: #fafaf6; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+    .window { margin-top: 1rem; padding: 1.15rem; border: 1px solid var(--border); border-radius: 16px; background: #fff; }
+    .window h3 { display: flex; align-items: center; gap: .55rem; margin: 0 0 .85rem; color: #65756a; font-size: .75rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .window h3::before { width: 7px; height: 7px; border-radius: 50%; background: #9eaf61; content: ""; }
+    .window ol { display: flex; flex-wrap: wrap; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+    .window li { display: inline-flex; align-items: center; gap: .45rem; min-height: 40px; padding: .3rem .55rem .3rem .85rem; border: 1px solid #e8ebdf; border-radius: 999px; background: #fbfcf8; }
+    .window li > a { color: var(--forest); font-weight: 750; text-decoration-color: #b8c9a8; text-underline-offset: 3px; }
+    .window li > a:hover { color: #426d38; }
+    .score { padding: .2rem .4rem; border-radius: 999px; color: #52654e; background: #eaf0e2; font-size: .76rem; font-weight: 700; }
     .warning { margin: 1.2rem 0 0; padding-top: 1rem; border-top: 1px solid var(--border); }
-    .upload-status { min-height: 1.5rem; margin-bottom: 0; color: var(--muted); }
+    .upload-status { min-height: 1.5rem; margin: .5rem 0 0; color: var(--muted); font-size: .9rem; }
+    .bird-dialog {
+      width: min(560px, calc(100% - 2rem)); max-height: min(85vh, 760px);
+      overflow: auto; padding: clamp(1.25rem, 4vw, 2rem);
+      border: 1px solid var(--border); border-radius: 22px;
+      color: #193a30; background: var(--paper); box-shadow: 0 24px 80px #10251c40;
+    }
+    .bird-dialog::backdrop { background: #10251c99; }
+    .dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .dialog-heading h2 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.7rem, 5vw, 2.2rem); font-weight: 500; }
+    .dialog-close { min-height: 42px; padding: .5rem .8rem; }
+    .dialog-scientific { margin: .25rem 0 1rem; color: var(--muted); font-style: italic; }
+    .dialog-photo { display: block; width: 100%; max-height: 360px; object-fit: cover; border-radius: 15px; }
+    .dialog-status, .dialog-source { color: var(--muted); font-size: .9rem; }
+    .dialog-source { display: block; margin-top: .5rem; }
+    @media (max-width: 640px) {
+      body { padding: 1.2rem .9rem 2rem; }
+      .hero { min-height: 0; gap: .5rem; padding: .5rem .1rem 1.5rem; }
+      .hero-art { width: 104px; height: 104px; flex-basis: 104px; }
+      .hero-art svg { width: 58px; height: 58px; }
+      .hero-art-label { right: -8px; bottom: 8px; padding: .4rem .55rem; font-size: .56rem; }
+      .hero-art::before { top: 13px; right: 13px; width: 12px; height: 12px; }
+      .hero-art::after { bottom: 16px; left: 12px; }
+    }
     @media (max-width: 480px) {
-      body { padding: 1.5rem .85rem; }
+      .hero { align-items: flex-start; }
+      .hero-art { width: 74px; height: 74px; flex-basis: 74px; margin-top: 1.7rem; }
+      .hero-art svg { width: 42px; height: 42px; }
+      h1 { font-size: clamp(2.45rem, 12vw, 3.3rem); }
+      .intro { font-size: .95rem; }
       .actions { display: grid; }
       .actions > * { width: 100%; }
+      .panel-heading { align-items: flex-start; }
+      .step-label { padding-top: .4rem; font-size: .58rem; }
+      .results-heading { align-items: flex-start; flex-direction: column; }
+      .window { padding: .9rem; }
+      .window li { width: 100%; justify-content: space-between; }
+      .file-badge { max-width: 100%; }
     }
-    @media (prefers-reduced-motion: no-preference) {
-      button, .file-picker { transition: background-color .15s ease; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
     }
   </style>
 </head>
 <body>
   <main>
-    <header>
-      <p class="eyebrow">Bird sound analysis · Aotearoa New Zealand</p>
-      <h1>What’s singing nearby?</h1>
-      <p class="intro">Record a bird call on your device or choose an audio file. The app analyses your sample in 5-second segments.</p>
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> Bird song field guide · Aotearoa</p>
+        <h1>Who’s singing<br><em>nearby?</em></h1>
+        <p class="intro">Bring the birdsong around you into focus. Record a call or upload a clip to discover who might be out there.</p>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M25 67c11-19 27-27 43-22 8 2 14 8 18 17l19 2-13 9c-3 15-15 25-31 25-13 0-23-6-29-16l-18 2 11-11Z" fill="#648253"/>
+          <path d="M85 62 105 62 87 70" fill="#D6A75E"/>
+          <circle cx="76" cy="58" r="2.5" fill="#193A30"/>
+          <path d="M37 78c11 9 25 12 38 7M51 98v9m18-9v9m-24 0h12m6 0h12" stroke="#193A30" stroke-width="3" stroke-linecap="round"/>
+          <path d="M29 52c7-8 15-12 25-13m30-13c8-1 14 1 19 5m-1 11c5 0 9 2 12 5" stroke="#91A779" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <span class="hero-art-label">NGĀ MANU</span>
+      </div>
     </header>
 
     <section class="panel" aria-labelledby="sample-heading">
-      <h2 id="sample-heading">Add a recording</h2>
+      <div class="panel-heading">
+        <span class="panel-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12m-4-4a4 4 0 0 0 8 0V7a4 4 0 0 0-8 0v4Z"/>
+            <path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3m-4 0h8"/>
+          </svg>
+        </span>
+        <div>
+          <h2 id="sample-heading">Listen to a bird</h2>
+          <p class="panel-subtitle">Choose a recording or capture one now.</p>
+        </div>
+        <span class="step-label">STEP 01</span>
+      </div>
       <form id="analysis-form" method="post" enctype="multipart/form-data">
         <div class="actions">
-          <button id="record-button" class="secondary" type="button" hidden>Record a sample</button>
-          <label class="file-picker" for="audio">Choose an audio file
+          <button id="record-button" class="secondary" type="button" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3v12m-4-4a4 4 0 0 0 8 0V7a4 4 0 0 0-8 0v4Z"/>
+              <path d="M5 11v1a7 7 0 0 0 14 0v-1"/>
+            </svg>
+            Record a sample
+          </button>
+          <label class="file-picker" for="audio">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 16V4m-5 5 5-5 5 5"/>
+              <path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/>
+            </svg>
+            Choose an audio file
             <input id="audio" name="audio" type="file" accept=".wav,.flac,.mp3,.ogg,.m4a,audio/*" required>
           </label>
-          <button id="analyze-button" type="submit">Analyze recording</button>
+          <button id="analyze-button" type="submit">
+            Analyze recording
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14m-6-6 6 6-6 6"/>
+            </svg>
+          </button>
         </div>
         <p id="recording-unavailable" class="hint" hidden>Microphone recording is not available in this browser. You can still choose an audio file.</p>
         <p id="recording-status" class="recording-status" role="status" aria-live="polite"></p>
@@ -115,8 +247,18 @@
     {% if results is defined %}
       <section class="results" aria-live="polite" aria-labelledby="results-heading">
         <div class="results-heading">
-          <h2 id="results-heading">Analysis results</h2>
-          <span class="muted">{{ filename }}</span>
+          <div class="results-title-wrap">
+            <span class="results-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19V9m5 10V5m5 14v-7m5 7V3"/>
+              </svg>
+            </span>
+            <div>
+              <span class="results-kicker">Your field notes</span>
+              <h2 id="results-heading">Analysis results</h2>
+            </div>
+          </div>
+          <span class="file-badge">{{ filename }}</span>
         </div>
         {% if results %}
           {% for window in results %}
@@ -124,7 +266,21 @@
               <h3>{{ "%.0f"|format(window.start) }}–{{ "%.0f"|format(window.end) }} seconds</h3>
               <ol>
                 {% for prediction in window.predictions %}
-                  <li>{{ prediction.label }} <span class="score">({{ "%.1f"|format(prediction.score * 100) }}%)</span></li>
+                  <li>
+                    {% if get_bird_facts(prediction.label) %}
+                      {% set bird = get_bird_facts(prediction.label) %}
+                      <a
+                        href="{{ url_for('bird_detail', slug=slugify_bird_label(prediction.label)) }}"
+                        data-bird-name="{{ bird.name }}"
+                        data-scientific-name="{{ bird.scientific_name }}"
+                        data-description="{{ bird.description }}"
+                        data-wikipedia-title="{{ bird.wikipedia_title }}"
+                      >{{ prediction.label }}</a>
+                    {% else %}
+                      {{ prediction.label }}
+                    {% endif %}
+                    <span class="score">({{ "%.1f"|format(prediction.score * 100) }}%)</span>
+                  </li>
                 {% endfor %}
               </ol>
             </article>
@@ -136,6 +292,83 @@
       </section>
     {% endif %}
   </main>
+  <dialog id="bird-dialog" class="bird-dialog" aria-labelledby="dialog-name">
+    <div class="dialog-heading">
+      <div>
+        <h2 id="dialog-name"></h2>
+        <p id="dialog-scientific-name" class="dialog-scientific"></p>
+      </div>
+      <button class="dialog-close" type="button" aria-label="Close bird facts">Close</button>
+    </div>
+    <p id="dialog-description"></p>
+    <img id="dialog-photo" class="dialog-photo" alt="" hidden>
+    <p id="dialog-status" class="dialog-status" role="status" aria-live="polite" hidden></p>
+    <a id="dialog-source" class="dialog-source" target="_blank" rel="noopener noreferrer" hidden>
+      Photo source: Wikipedia
+    </a>
+  </dialog>
+  <script>
+    (() => {
+      const dialog = document.querySelector("#bird-dialog");
+      const closeButton = dialog.querySelector(".dialog-close");
+      const name = document.querySelector("#dialog-name");
+      const scientificName = document.querySelector("#dialog-scientific-name");
+      const description = document.querySelector("#dialog-description");
+      const photo = document.querySelector("#dialog-photo");
+      const status = document.querySelector("#dialog-status");
+      const source = document.querySelector("#dialog-source");
+      let imageRequest;
+
+      document.addEventListener("click", (event) => {
+        const link = event.target.closest("a[data-bird-name]");
+        if (!link) return;
+
+        event.preventDefault();
+        if (imageRequest) imageRequest.abort();
+        photo.hidden = true;
+        photo.removeAttribute("src");
+        source.hidden = true;
+        source.removeAttribute("href");
+        status.hidden = false;
+        status.textContent = "Loading a photo…";
+        name.textContent = link.dataset.birdName;
+        scientificName.textContent = link.dataset.scientificName;
+        description.textContent = link.dataset.description;
+        dialog.showModal();
+
+        imageRequest = new AbortController();
+        const endpoint = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(link.dataset.wikipediaTitle)}`;
+        fetch(endpoint, { signal: imageRequest.signal })
+          .then((response) => {
+            if (!response.ok) throw new Error("No photo is available right now.");
+            return response.json();
+          })
+          .then((page) => {
+            if (!page.thumbnail || !page.thumbnail.source) {
+              throw new Error("No photo is available for this bird.");
+            }
+            photo.src = page.thumbnail.source;
+            photo.alt = `Photo of ${link.dataset.birdName}`;
+            photo.hidden = false;
+            status.hidden = true;
+            if (page.content_urls && page.content_urls.desktop) {
+              source.href = page.content_urls.desktop.page;
+              source.hidden = false;
+            }
+          })
+          .catch((error) => {
+            if (error.name !== "AbortError") {
+              status.textContent = "A photo could not be loaded. The bird facts are still available.";
+            }
+          });
+      });
+
+      closeButton.addEventListener("click", () => dialog.close());
+      dialog.addEventListener("close", () => {
+        if (imageRequest) imageRequest.abort();
+      });
+    })();
+  </script>
   <script>
     (() => {
       const form = document.querySelector("#analysis-form");

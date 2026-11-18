@@ -5,6 +5,11 @@ classifying it with the saved NZ probe (`nz_birds_probe.joblib`). Perch 2.0
 creates embeddings for 5-second audio segments; the probe returns the top three
 non-background labels for each segment.
 
+Each recognized label links to a bird facts page with its scientific name,
+an overview, and a photo loaded from Wikipedia when available. Photos are
+fetched by the viewer's browser; the facts page remains usable if the image
+service is unavailable.
+
 ## Run locally
 
 Use Python in an environment supported by TensorFlow and Perch 2.0:
